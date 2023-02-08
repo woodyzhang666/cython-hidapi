@@ -5,7 +5,6 @@ import sys
 import subprocess
 
 hidapi_topdir = os.path.join("hidapi")
-hidapi_include = os.path.join(hidapi_topdir, "hidapi")
 system_hidapi = 0
 libs = []
 src = ["hid.pyx", "chid.pxd"]
@@ -18,7 +17,6 @@ def hidapi_src(platform):
 if "--with-system-hidapi" in sys.argv:
     sys.argv.remove("--with-system-hidapi")
     system_hidapi = 1
-    hidapi_include = "/usr/include/hidapi"
 
 if sys.platform.startswith("linux"):
     modules = []
@@ -36,7 +34,6 @@ if sys.platform.startswith("linux"):
             Extension(
                 "hid",
                 sources=src,
-                include_dirs=[hidapi_include, "/usr/include/libusb-1.0"],
                 libraries=libs,
             )
         )
@@ -48,7 +45,7 @@ if sys.platform.startswith("linux"):
         src.append(hidapi_src("linux"))
     modules.append(
         Extension(
-            hidraw_module, sources=src, include_dirs=[hidapi_include], libraries=libs,
+            hidraw_module, sources=src, libraries=libs,
         )
     )
 
@@ -66,7 +63,7 @@ if sys.platform.startswith("darwin"):
     else:
         src.append(hidapi_src("mac"))
     modules = [
-        Extension("hid", sources=src, include_dirs=[hidapi_include], libraries=libs,)
+        Extension("hid", sources=src, libraries=libs,)
     ]
 
 if sys.platform.startswith("win") or sys.platform.startswith("cygwin"):
@@ -76,27 +73,20 @@ if sys.platform.startswith("win") or sys.platform.startswith("cygwin"):
     else:
         src.append(hidapi_src("windows"))
     modules = [
-        Extension("hid", sources=src, include_dirs=[hidapi_include], libraries=libs,)
+        Extension("hid", sources=src,  libraries=libs,)
     ]
 
 if "bsd" in sys.platform:
     if "freebsd" in sys.platform:
         libs = ["usb", "hidapi"]
-        include_dirs_bsd = ["/usr/local/include/hidapi"]
     else:
         libs = ["usb-1.0"]
-        include_dirs_bsd = [
-            hidapi_include,
-            "/usr/include/libusb-1.0",
-            "/usr/local/include/libusb-1.0",
-            "/usr/local/include/",
-        ]
         if system_hidapi == True:
             libs.append("hidapi-libusb")
         else:
             src.append(hidapi_src("libusb"))
     modules = [
-        Extension("hid", sources=src, include_dirs=include_dirs_bsd, libraries=libs,)
+        Extension("hid", sources=src, libraries=libs,)
     ]
 
 setup(
